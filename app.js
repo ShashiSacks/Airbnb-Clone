@@ -254,7 +254,7 @@ passport.use(
         process.env.GOOGLE_CLIENT_SECRET,
 
         callbackURL:
-"https://airbnb-clone-egf89r32k-vaishashis-projects.vercel.app/auth/google/callback",
+"https://airbnb-clone-nine-green.vercel.app/auth/google/callback",
 
     },
 

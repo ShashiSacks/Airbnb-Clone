@@ -189,6 +189,7 @@ const sessionOptions = {
 
   secret:
     process.env.SECRET,
+
   resave: false,
 
   saveUninitialized: false,
@@ -254,8 +255,8 @@ passport.use(
       clientSecret:
         process.env.GOOGLE_CLIENT_SECRET,
 
-        callbackURL:
-  "https://airbnb-clone-h7jt.onrender.com/auth/google/callback",
+      callbackURL:
+        "https://airbnb-clone-h7jt.onrender.com/auth/google/callback",
 
     },
 
@@ -267,6 +268,8 @@ passport.use(
     ) => {
 
       try {
+
+        // Existing Google User
 
         let existingUser =
           await User.findOne({
@@ -284,6 +287,32 @@ passport.use(
           );
 
         }
+
+        // Existing normal signup user
+
+        let emailUser =
+          await User.findOne({
+
+            email:
+              profile.emails?.[0]?.value,
+
+          });
+
+        if (emailUser) {
+
+          emailUser.googleId =
+            profile.id;
+
+          await emailUser.save();
+
+          return done(
+            null,
+            emailUser
+          );
+
+        }
+
+        // New Google User
 
         const newUser =
           new User({
@@ -362,37 +391,37 @@ app.use(
   (req, res, next) => {
 
     let errors =
-      req.flash("error");
+      req.flash("error") || [];
 
-    errors = errors.map(
-      (err) => {
+    errors = errors.map((err) => {
 
-        if (
+      if (!err) return "";
 
-          err.includes(
-            "Missing credentials"
-          ) ||
+      if (
 
-          err.includes(
-            "Incorrect username"
-          ) ||
+        err.includes(
+          "Missing credentials"
+        ) ||
 
-          err.includes(
-            "Incorrect password"
-          )
+        err.includes(
+          "Incorrect username"
+        ) ||
 
-        ) {
+        err.includes(
+          "Incorrect password"
+        )
 
-          return (
-            "Incorrect username or password"
-          );
+      ) {
 
-        }
-
-        return err;
+        return (
+          "Incorrect username or password"
+        );
 
       }
-    );
+
+      return err;
+
+    });
 
     res.locals.success =
       req.flash(
@@ -564,10 +593,10 @@ app.post(
           mode: "payment",
 
           success_url:
-            "http://localhost:8080/success",
+            "https://airbnb-clone-h7jt.onrender.com/success",
 
           cancel_url:
-            "http://localhost:8080/cancel",
+            "https://airbnb-clone-h7jt.onrender.com/cancel",
 
         });
 

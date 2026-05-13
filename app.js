@@ -156,12 +156,8 @@ const store =
     mongoUrl:
       dbUrl,
 
-    crypto: {
-
-      secret:
-        process.env.SECRET
-
-    },
+    secret:
+      process.env.SECRET,
 
     touchAfter:
       24 * 3600,
@@ -197,12 +193,14 @@ const sessionOptions = {
   cookie: {
 
     expires:
-      Date.now() +
-      7 *
-        24 *
-        60 *
-        60 *
-        1000,
+      new Date(
+        Date.now() +
+        7 *
+          24 *
+          60 *
+          60 *
+          1000
+      ),
 
     maxAge:
       7 *
@@ -255,8 +253,8 @@ passport.use(
       clientSecret:
         process.env.GOOGLE_CLIENT_SECRET,
 
-      callbackURL:
-        "https://airbnb-clone-h7jt.onrender.com/auth/google/callback",
+        callbackURL:
+"https://airbnb-clone-egf89r32k-vaishashis-projects.vercel.app/auth/google/callback",
 
     },
 
@@ -397,17 +395,26 @@ app.use(
 
       if (!err) return "";
 
+      const errorMessage =
+
+        typeof err === "string"
+
+          ? err
+
+          : err.message ||
+            "Something went wrong";
+
       if (
 
-        err.includes(
+        errorMessage.includes(
           "Missing credentials"
         ) ||
 
-        err.includes(
+        errorMessage.includes(
           "Incorrect username"
         ) ||
 
-        err.includes(
+        errorMessage.includes(
           "Incorrect password"
         )
 
@@ -419,7 +426,7 @@ app.use(
 
       }
 
-      return err;
+      return errorMessage;
 
     });
 
@@ -527,11 +534,30 @@ app.use(
 );
 
 
-// Stripe
+// Stripe Protected Route
 
 app.post(
 
   "/create-checkout-session/:id",
+
+  (req, res, next) => {
+
+    if (!req.isAuthenticated()) {
+
+      req.flash(
+        "error",
+        "You should login in order to book!"
+      );
+
+      return res.redirect(
+        "/login"
+      );
+
+    }
+
+    next();
+
+  },
 
   async (
     req,
@@ -593,10 +619,10 @@ app.post(
           mode: "payment",
 
           success_url:
-            "https://airbnb-clone-h7jt.onrender.com/success",
+            "https://airbnb-clone-nine-green.vercel.app/success",
 
           cancel_url:
-            "https://airbnb-clone-h7jt.onrender.com/cancel",
+            "https://airbnb-clone-nine-green.vercel.app/cancel",
 
         });
 
@@ -718,6 +744,10 @@ app.use(
     res,
     next
   ) => {
+
+    if (res.headersSent) {
+      return next(err);
+    }
 
     console.log(err);
 
